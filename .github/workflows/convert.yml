@@ -1,0 +1,36 @@
+name: Universal File Processor
+
+on:
+  repository_dispatch:
+    types: [process_file]
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Heavy System Dependencies 🦚
+        run: |
+          sudo apt update -qq
+          sudo apt install -y ffmpeg imagemagick libreoffice pandoc unzip zip p7zip-full p7zip-rar rar unrar tar gzip bzip2 xz-utils libmagickwand-dev libheif-dev
+
+      - name: Set up Python 3.10 🐍
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Python Packages 📦
+        run: pip install -r requirements.txt
+
+      - name: Run Stylish Converter Engine ✨
+        env:
+          JOB_ID: ${{ github.event.client_payload.jobId }}
+          FILE_URL: ${{ github.event.client_payload.fileUrl }}
+          FORMAT: ${{ github.event.client_payload.format }}
+          FILE_NAME: ${{ github.event.client_payload.fileName }}
+          B4A_APP_ID: ${{ secrets.BACK4APP_APP_ID }}
+          B4A_REST_KEY: ${{ secrets.BACK4APP_REST_KEY }}
+        run: python process.py
